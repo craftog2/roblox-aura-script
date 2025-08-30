@@ -1,111 +1,94 @@
--- Überprüfe, ob das Skript in Roblox ausgeführt wird
-if game then
-    -- Definiere die Aura-IDs
-    local auraIDs = {
-        12532288301, -- 1.0 Blue Fire Aura
-        12532302225, -- 1.0 Purple Fire Aura
-        12532440639, -- Green Fire Aura 1.0
-        13948000252, -- 1.0 Blue Meteor Aura
-        12672411889, -- 1.0 Yellow Fire Aura
-        13948001865, -- 1.0 Purple Meteor Aura
-        13948007143, -- 1.0 Inverted Meteor Aura
-        14077536383  -- 1.0 Fire and Ice Aura
-    }
+-- Prüfen, ob wir in Roblox sind
+if not game then return end
 
-    -- Funktion zum Umschalten der Auren
-    local function toggleAuras()
-        for _, auraID in ipairs(auraIDs) do
-            local aura = game.Players.LocalPlayer.Character:FindFirstChild(auraID)
-            if aura then
-                aura:Destroy()
-            else
-                local newAura = Instance.new("Part")
-                newAura.Name = tostring(auraID)
-                newAura.Parent = game.Players.LocalPlayer.Character
-                newAura.Anchored = true
-                newAura.CanCollide = false
-                newAura.Size = Vector3.new(1, 1, 1)
-                newAura.Position = game.Players.LocalPlayer.Character.HumanoidRootPart.Position
-                newAura.Transparency = 1
-                newAura.CustomPhysicalProperties = PhysicalProperties.new(0.0, 0.0, 0.0)
-            end
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+
+-- Aura-IDs
+local auraIDs = {
+    12532288301,
+    12532302225,
+    12532440639,
+    13948000252,
+    12672411889,
+    13948001865,
+    13948007143,
+    14077536383
+}
+
+-- Geschwindigkeit
+local speedLevel = 2 -- 1=Langsam, 2=Normal, 3=Schnell, 4=Turbo
+local speedHeights = {1,2,3,4}
+
+-- Erstelle Auren
+local function toggleAuras()
+    for _, auraID in ipairs(auraIDs) do
+        local aura = character:FindFirstChild(tostring(auraID))
+        if aura then
+            aura:Destroy()
+        else
+            local newAura = Instance.new("Part")
+            newAura.Name = tostring(auraID)
+            newAura.Size = Vector3.new(1,1,1)
+            newAura.Position = character:WaitForChild("HumanoidRootPart").Position
+            newAura.Anchored = true
+            newAura.CanCollide = false
+            newAura.Transparency = 1
+            newAura.Parent = character
         end
     end
-
-    -- Funktion zur Anpassung der Geschwindigkeit
-    local function adjustSpeed(speed)
-        game:GetService("RunService").RenderStepped:Connect(function()
-            for _, auraID in ipairs(auraIDs) do
-                local aura = game.Players.LocalPlayer.Character:FindFirstChild(auraID)
-                if aura then
-                    if speed == "Langsam" then
-                        aura.Position = game.Players.LocalPlayer.Character.HumanoidRootPart.Position + Vector3.new(0, 1, 0)
-                    elseif speed == "Normal" then
-                        aura.Position = game.Players.LocalPlayer.Character.HumanoidRootPart.Position + Vector3.new(0, 2, 0)
-                    elseif speed == "Schnell" then
-                        aura.Position = game.Players.LocalPlayer.Character.HumanoidRootPart.Position + Vector3.new(0, 3, 0)
-                    elseif speed == "Turbo" then
-                        aura.Position = game.Players.LocalPlayer.Character.HumanoidRootPart.Position + Vector3.new(0, 4, 0)
-                    end
-                end
-            end
-        end)
-    end
-
-    -- Entferne alle Partikeleffekte und Accessoires
-    local function removeEffectsAndAccessories()
-        for _, child in ipairs(game.Players.LocalPlayer.Character:GetChildren()) do
-            if child:IsA("Accessory") or child:IsA("ParticleEmitter") then
-                child:Destroy()
-            end
-        end
-    end
-
-    -- Erstelle die GUI
-    local function createGUI()
-        local screenGui = Instance.new("ScreenGui")
-        local mainFrame = Instance.new("Frame")
-        local toggleButton = Instance.new("TextButton")
-        local speedDropdown = Instance.new("Dropdown")
-
-        screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
-        mainFrame.Size = UDim2.new(0, 200, 0, 100)
-        mainFrame.Position = UDim2.new(0, 10, 0, 10)
-        mainFrame.BackgroundColor3 = Color3.new(0, 0, 0)
-        mainFrame.BorderSizePixel = 1
-        mainFrame.Parent = screenGui
-
-        toggleButton.Size = UDim2.new(0, 180, 0, 40)
-        toggleButton.Position = UDim2.new(0, 10, 0, 10)
-        toggleButton.Text = "Auren Umschalten"
-        toggleButton.BackgroundColor3 = Color3.new(1, 1, 1)
-        toggleButton.BorderSizePixel = 1
-        toggleButton.Parent = mainFrame
-
-        speedDropdown.Size = UDim2.new(0, 180, 0, 40)
-        speedDropdown.Position = UDim2.new(0, 10, 0, 60)
-        speedDropdown.Options = {"Langsam", "Normal", "Schnell", "Turbo"}
-        speedDropdown.Selected = "Normal"
-        speedDropdown.BackgroundColor3 = Color3.new(1, 1, 1)
-        speedDropdown.BorderSizePixel = 1
-        speedDropdown.Parent = mainFrame
-
-        -- Ereignis-Listener
-        toggleButton.MouseButton1Click:Connect(toggleAuras)
-        speedDropdown.Changed:Connect(function()
-            adjustSpeed(speedDropdown.Selected)
-        end)
-    end
-
-    -- Hauptfunktion
-    local function main()
-        removeEffectsAndAccessories()
-        createGUI()
-        adjustSpeed("Normal") -- Standardgeschwindigkeit setzen
-    end
-
-    -- Führe das Skript aus
-    main()
-else
-    print("Dieses Skript muss in Roblox ausgeführt werden.")
 end
+
+-- GUI erstellen
+local function createGUI()
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Parent = player:WaitForChild("PlayerGui")
+
+    local mainFrame = Instance.new("Frame")
+    mainFrame.Size = UDim2.new(0,200,0,150)
+    mainFrame.Position = UDim2.new(0,10,0,10)
+    mainFrame.BackgroundColor3 = Color3.new(0,0,0)
+    mainFrame.BorderSizePixel = 1
+    mainFrame.Parent = screenGui
+
+    local toggleButton = Instance.new("TextButton")
+    toggleButton.Size = UDim2.new(0,180,0,40)
+    toggleButton.Position = UDim2.new(0,10,0,10)
+    toggleButton.Text = "Auren Umschalten"
+    toggleButton.BackgroundColor3 = Color3.new(1,1,1)
+    toggleButton.Parent = mainFrame
+    toggleButton.MouseButton1Click:Connect(toggleAuras)
+
+    local speeds = {"Langsam","Normal","Schnell","Turbo"}
+    for i, v in ipairs(speeds) do
+        local btn = Instance.new("TextButton")
+        btn.Size = UDim2.new(0,80,0,30)
+        btn.Position = UDim2.new(0,10 + ((i-1)*45),0,60)
+        btn.Text = v
+        btn.BackgroundColor3 = Color3.new(0.7,0.7,0.7)
+        btn.Parent = mainFrame
+        btn.MouseButton1Click:Connect(function()
+            speedLevel = i
+        end)
+    end
+end
+
+-- RenderLoop für Auren
+game:GetService("RunService").RenderStepped:Connect(function()
+    for _, auraID in ipairs(auraIDs) do
+        local aura = character:FindFirstChild(tostring(auraID))
+        if aura then
+            aura.Position = character.HumanoidRootPart.Position + Vector3.new(0,speedHeights[speedLevel],0)
+        end
+    end
+end)
+
+-- Effekte entfernen
+for _, child in ipairs(character:GetChildren()) do
+    if child:IsA("Accessory") or child:IsA("ParticleEmitter") then
+        child:Destroy()
+    end
+end
+
+-- GUI starten
+createGUI()
